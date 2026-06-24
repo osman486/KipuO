@@ -1,0 +1,593 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заповедники Крыма</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.4/dist/vuetify.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: #f5f9f5; }
+        [v-cloak] { display: none; }
+        .green-header { background: linear-gradient(135deg, #1a5c3a, #0a3d2a); }
+        .card-hover { transition: all 0.3s; border-radius: 16px; overflow: hidden; }
+        .card-hover:hover { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+        .footer-dark { background: #0a3d2a; color: white; }
+        .page-title { font-size: 2rem; font-weight: 700; color: #1a5c3a; }
+        .page-subtitle { color: #666; font-size: 1rem; }
+        .region-badge { background: #e8f5e9; color: #1b5e20; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .detail-content { padding: 24px; }
+        .detail-content h1 { font-size: 2rem; font-weight: 700; color: #1a5c3a; margin-bottom: 8px; }
+        .detail-content .region { display: inline-block; background: #1a5c3a; color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 16px; }
+        .detail-content p { line-height: 1.8; color: #444; font-size: 1.05rem; }
+        .detail-image { width: 100%; height: 350px; object-fit: cover; border-radius: 0 0 16px 16px; }
+        .carousel-caption { position: absolute; bottom: 30%; left: 0; right: 0; text-align: center; padding: 20px; background: rgba(0,0,0,0.4); }
+        .carousel-caption h2 { color: white; font-size: 2.2rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+        .carousel-caption .btn-explore { background: white; color: #1a5c3a; border: none; padding: 10px 30px; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; margin-top: 12px; transition: 0.3s; }
+        .carousel-caption .btn-explore:hover { background: #1a5c3a; color: white; }
+    </style>
+</head>
+<body>
+    <div id="app" v-cloak>
+        <v-app>
+            <!-- ШАПКА -->
+            <v-app-bar app flat class="green-header" elevation="2">
+                <v-app-bar-nav-icon @click="drawer = !drawer" color="white"></v-app-bar-nav-icon>
+                <v-toolbar-title class="text-white font-weight-bold">
+                    <v-icon icon="mdi-pine-tree" color="white" class="mr-2"></v-icon>
+                    КрымЗаповедный
+                </v-toolbar-title>
+                <v-spacer></v-spacer>
+                <div class="hidden-sm-and-down">
+                    <v-btn variant="text" to="/" class="text-white">Главная</v-btn>
+                    <v-btn variant="text" to="/login" class="text-white" v-if="!isLoggedIn">Войти</v-btn>
+                    <v-btn variant="text" to="/registration" class="text-white" v-if="!isLoggedIn">Регистрация</v-btn>
+                    <v-btn variant="text" to="/list" class="text-white" v-if="isLoggedIn">Мои заповедники</v-btn>
+                    <v-btn variant="text" to="/new" class="text-white" v-if="isLoggedIn">Добавить</v-btn>
+                    <v-btn variant="text" to="/orders" class="text-white" v-if="isLoggedIn">Заявки</v-btn>
+                    <v-btn variant="text" @click="logout" class="text-white" v-if="isLoggedIn">Выйти</v-btn>
+                </div>
+            </v-app-bar>
+
+            <!-- БОКОВОЕ МЕНЮ -->
+            <v-navigation-drawer app v-model="drawer" width="280">
+                <div class="pa-4 text-center" style="background: #1a5c3a;">
+                    <v-icon icon="mdi-pine-tree" size="48" color="white"></v-icon>
+                    <div class="text-h6 text-white font-weight-bold mt-2">Заповедники Крыма</div>
+                </div>
+                <v-list>
+                    <v-list-item to="/" @click="drawer=false">
+                        <v-list-item-title>🏠 Главная</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/login" @click="drawer=false" v-if="!isLoggedIn">
+                        <v-list-item-title>🔑 Войти</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/registration" @click="drawer=false" v-if="!isLoggedIn">
+                        <v-list-item-title>📝 Регистрация</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/list" @click="drawer=false" v-if="isLoggedIn">
+                        <v-list-item-title>📋 Мои заповедники</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/new" @click="drawer=false" v-if="isLoggedIn">
+                        <v-list-item-title>➕ Добавить</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item to="/orders" @click="drawer=false" v-if="isLoggedIn">
+                        <v-list-item-title>📩 Заявки</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="logout" v-if="isLoggedIn">
+                        <v-list-item-title>🚪 Выйти</v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-navigation-drawer>
+
+            <!-- ОСНОВНОЙ КОНТЕНТ -->
+            <v-main>
+                <router-view></router-view>
+            </v-main>
+
+            <!-- ПОДВАЛ (один, внизу) -->
+            <v-footer class="footer-dark" app>
+                <v-container>
+                    <v-row justify="space-between" align="center">
+                        <v-col cols="12" md="6" class="text-center text-md-left">
+                            <v-icon icon="mdi-pine-tree" size="20"></v-icon>
+                            <span class="font-weight-bold ml-1">Заповедники Крыма</span>
+                            <div class="text-caption opacity-75">Официальный портал об ООПТ Крыма</div>
+                        </v-col>
+                        <v-col cols="12" md="6" class="text-center text-md-right">
+                            <v-icon icon="mdi-email" size="16"></v-icon> info@crimea-reserve.ru
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-footer>
+
+            <!-- УВЕДОМЛЕНИЯ -->
+            <v-snackbar v-model="showError" color="error" timeout="4000" location="bottom right">
+                {{ errorMsg }}
+                <template v-slot:actions>
+                    <v-btn variant="text" icon="mdi-close" @click="showError=false" color="white"></v-btn>
+                </template>
+            </v-snackbar>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-router@4.4.0/dist/vue-router.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuex@4.1.0/dist/vuex.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.4/dist/vuetify.min.js"></script>
+
+    <script>
+        // ==================== STORE ====================
+        const store = new Vuex.Store({
+            state: {
+                user: null,
+                loading: false,
+                error: null,
+                reserves: [
+                    { id: 1, title: "Крымский природный заповедник", desc: "Крупнейший заповедник Крыма площадью более 44 тысяч гектаров. Обитают олени, косули, муфлоны, кабаны. Гора Роман-Кош (1545 м) — высочайшая точка Крыма.", promo: true, src: "https://images.pexels.com/photos/167132/pexels-photo-167132.jpeg?auto=compress&cs=tinysrgb&w=1000", region: "Алушта", userId: 1 },
+                    { id: 2, title: "Ялтинский горно-лесной заповедник", desc: "Можжевеловые рощи, реликтовые сосны, водопад Учан-Су (98 м). Ай-Петринская зубчатка — визитная карточка Южного берега.", promo: true, src: "https://images.pexels.com/photos/206324/pexels-photo-206324.jpeg?auto=compress&cs=tinysrgb&w=1000", region: "Ялта", userId: 1 },
+                    { id: 3, title: "Карадагский заповедник", desc: "Древний вулкан возрастом 150 млн лет, скалы-скелы и Золотые ворота. Более 2500 видов растений и животных.", promo: true, src: "https://images.pexels.com/photos/327685/pexels-photo-327685.jpeg?auto=compress&cs=tinysrgb&w=1000", region: "Коктебель", userId: 2 },
+                    { id: 4, title: "Мыс Мартьян", desc: "Реликтовые можжевеловые рощи, вечнозелёные дубы. Уникальная коллекция средиземноморских растений.", promo: true, src: "https://images.pexels.com/photos/2418622/pexels-photo-2418622.jpeg?auto=compress&cs=tinysrgb&w=1000", region: "Никита", userId: 1 },
+                    { id: 5, title: "Опукский заповедник", desc: "Солёные озера Кояшское, где гнездятся розовые фламинго! Скалы-корабли и уникальная степная флора.", promo: false, src: "https://images.pexels.com/photos/4516132/pexels-photo-4516132.jpeg?auto=compress&cs=tinysrgb&w=1000", region: "Керчь", userId: 1 },
+                    { id: 6, title: "Казантипский заповедник", desc: "Живописный полуостров с древними рифами и солёными озёрами. Важнейший пункт миграции птиц.", promo: false, src: "https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=1000", region: "Щёлкино", userId: 2 }
+                ],
+                orders: []
+            },
+            mutations: {
+                setUser(state, user) { state.user = user; },
+                setLoading(state, val) { state.loading = val; },
+                setError(state, err) { state.error = err; },
+                clearError(state) { state.error = null; },
+                addReserve(state, reserve) { state.reserves.push(reserve); },
+                updateReserve(state, { id, title, desc, region }) {
+                    const idx = state.reserves.findIndex(r => r.id == id);
+                    if (idx >= 0) { if (title) state.reserves[idx].title = title; if (desc) state.reserves[idx].desc = desc; if (region) state.reserves[idx].region = region; }
+                },
+                addOrder(state, order) { state.orders.push(order); },
+                toggleOrder(state, id) { const o = state.orders.find(o => o.id == id); if (o) o.done = !o.done; }
+            },
+            actions: {
+                register({ commit, dispatch }, { email, password, name }) {
+                    dispatch('clearError');
+                    commit('setLoading', true);
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            if (email && password && password.length >= 3) {
+                                commit('setUser', { id: Date.now(), email, name: name || email.split('@')[0] });
+                                commit('setLoading', false);
+                                resolve();
+                            } else {
+                                commit('setLoading', false);
+                                commit('setError', 'Ошибка регистрации');
+                                reject();
+                            }
+                        }, 800);
+                    });
+                },
+                login({ commit, dispatch }, { email, password }) {
+                    dispatch('clearError');
+                    commit('setLoading', true);
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            if (email && password) {
+                                commit('setUser', { id: Date.now(), email, name: email.split('@')[0] });
+                                commit('setLoading', false);
+                                resolve();
+                            } else {
+                                commit('setLoading', false);
+                                commit('setError', 'Неверный email или пароль');
+                                reject();
+                            }
+                        }, 800);
+                    });
+                },
+                logout({ commit }) { commit('setUser', null); },
+                clearError({ commit }) { commit('clearError'); },
+                createReserve({ commit, state, dispatch }, data) {
+                    dispatch('clearError');
+                    commit('setLoading', true);
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            const newReserve = {
+                                ...data,
+                                id: Date.now(),
+                                userId: state.user?.id || 1,
+                                src: data.src || "https://images.pexels.com/photos/206324/pexels-photo-206324.jpeg?auto=compress&cs=tinysrgb&w=1000"
+                            };
+                            commit('addReserve', newReserve);
+                            commit('setLoading', false);
+                            resolve(newReserve);
+                        }, 800);
+                    });
+                },
+                editReserve({ commit, dispatch }, data) {
+                    dispatch('clearError');
+                    commit('setLoading', true);
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            commit('updateReserve', data);
+                            commit('setLoading', false);
+                            resolve();
+                        }, 600);
+                    });
+                },
+                createOrder({ commit, state }, data) {
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            commit('addOrder', { ...data, id: Date.now(), userId: state.user?.id || 1, done: false, date: new Date().toLocaleDateString() });
+                            resolve();
+                        }, 500);
+                    });
+                },
+                toggleOrder({ commit }, id) { commit('toggleOrder', id); }
+            },
+            getters: {
+                user: state => state.user,
+                isLoggedIn: state => !!state.user,
+                loading: state => state.loading,
+                error: state => state.error,
+                reserves: state => state.reserves,
+                promoReserves: state => state.reserves.filter(r => r.promo),
+                myReserves: (state, getters) => state.reserves.filter(r => r.userId == (getters.user?.id || null)),
+                reserveById: (state) => (id) => state.reserves.find(r => r.id == id),
+                myOrders: (state, getters) => state.orders.filter(o => o.userId == (getters.user?.id || null))
+            }
+        });
+
+        // ==================== ROUTER ====================
+        const requireAuth = (to, from, next) => {
+            if (store.getters.isLoggedIn) next();
+            else next('/login');
+        };
+
+        // ==================== КОМПОНЕНТЫ ====================
+
+        // Главная
+        const Home = {
+            template: `
+                <div>
+                    <v-carousel cycle interval="4000" height="480" hide-delimiter-background>
+                        <v-carousel-item v-for="r in promo" :key="r.id" :src="r.src" cover>
+                            <div class="carousel-caption">
+                                <h2>{{ r.title }}</h2>
+                                <div style="color:white;opacity:0.9;">{{ r.region }}</div>
+                                <router-link :to="'/reserve/'+r.id" class="btn-explore">Исследовать →</router-link>
+                            </div>
+                        </v-carousel-item>
+                    </v-carousel>
+
+                    <v-container class="mt-6">
+                        <div class="text-center mb-6">
+                            <div style="color:#1a5c3a;font-weight:600;letter-spacing:2px;font-size:0.8rem;">ОСОБО ОХРАНЯЕМЫЕ ТЕРРИТОРИИ</div>
+                            <div class="page-title">Заповедники Крыма</div>
+                            <div class="page-subtitle">Официальный портал об ООПТ Крыма</div>
+                        </div>
+
+                        <v-row>
+                            <v-col cols="12" sm="6" md="4" v-for="r in allReserves" :key="r.id">
+                                <v-card class="card-hover" elevation="2">
+                                    <v-img :src="r.src" height="200" cover></v-img>
+                                    <v-card-text>
+                                        <span class="region-badge">{{ r.region }}</span>
+                                        <h3 style="font-size:1.1rem;font-weight:700;margin:8px 0 4px;">{{ r.title }}</h3>
+                                        <p style="font-size:0.85rem;color:#555;height:60px;overflow:hidden;">{{ r.desc }}</p>
+                                    </v-card-text>
+                                    <v-card-actions>
+                                        <v-spacer></v-spacer>
+                                        <v-btn variant="outlined" color="green" :to="'/reserve/'+r.id" size="small">Подробнее</v-btn>
+                                        <buy-modal :reserve="r"></buy-modal>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </v-container>
+                </div>
+            `,
+            computed: {
+                allReserves() { return store.getters.reserves; },
+                promo() { return store.getters.promoReserves; }
+            }
+        };
+
+        // Логин
+        const Login = {
+            template: `
+                <v-container fill-height>
+                    <v-row justify="center" align="center" style="min-height:65vh;">
+                        <v-col cols="12" sm="6" md="4">
+                            <v-card rounded="xl" elevation="8">
+                                <div class="green-header pa-4 text-center rounded-t-xl">
+                                    <v-icon icon="mdi-pine-tree" size="40" color="white"></v-icon>
+                                    <div class="text-h5 text-white mt-2">Вход</div>
+                                </div>
+                                <v-card-text class="pt-6">
+                                    <v-text-field label="Email" v-model="email" variant="outlined" prepend-inner-icon="mdi-email"></v-text-field>
+                                    <v-text-field label="Пароль" v-model="password" type="password" variant="outlined" prepend-inner-icon="mdi-lock"></v-text-field>
+                                </v-card-text>
+                                <v-card-actions class="px-6 pb-4">
+                                    <v-btn color="#1a5c3a" @click="submit" :loading="loading" block rounded="pill" size="large">Войти</v-btn>
+                                </v-card-actions>
+                                <div class="text-center pb-4"><router-link to="/registration" style="color:#1a5c3a;text-decoration:none;">Нет аккаунта? Регистрация</router-link></div>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            `,
+            data: () => ({ email: '', password: '' }),
+            computed: { loading() { return store.state.loading; } },
+            methods: {
+                submit() {
+                    store.dispatch('login', { email: this.email, password: this.password })
+                        .then(() => this.$router.push('/'))
+                        .catch(() => {});
+                }
+            }
+        };
+
+        // Регистрация
+        const Register = {
+            template: `
+                <v-container fill-height>
+                    <v-row justify="center" align="center" style="min-height:65vh;">
+                        <v-col cols="12" sm="6" md="4">
+                            <v-card rounded="xl" elevation="8">
+                                <div class="green-header pa-4 text-center rounded-t-xl">
+                                    <v-icon icon="mdi-account-plus" size="40" color="white"></v-icon>
+                                    <div class="text-h5 text-white mt-2">Регистрация</div>
+                                </div>
+                                <v-card-text class="pt-6">
+                                    <v-text-field label="Имя" v-model="name" variant="outlined" prepend-inner-icon="mdi-account"></v-text-field>
+                                    <v-text-field label="Email" v-model="email" variant="outlined" prepend-inner-icon="mdi-email"></v-text-field>
+                                    <v-text-field label="Пароль" v-model="password" type="password" variant="outlined" prepend-inner-icon="mdi-lock"></v-text-field>
+                                    <v-text-field label="Подтверждение" v-model="confirm" type="password" variant="outlined" prepend-inner-icon="mdi-lock-check"></v-text-field>
+                                </v-card-text>
+                                <v-card-actions class="px-6 pb-4">
+                                    <v-btn color="#1a5c3a" @click="submit" :loading="loading" block rounded="pill" size="large">Создать</v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            `,
+            data: () => ({ name: '', email: '', password: '', confirm: '' }),
+            computed: { loading() { return store.state.loading; } },
+            methods: {
+                submit() {
+                    if (this.password !== this.confirm) { store.commit('setError', 'Пароли не совпадают'); return; }
+                    store.dispatch('register', { name: this.name, email: this.email, password: this.password })
+                        .then(() => this.$router.push('/'))
+                        .catch(() => {});
+                }
+            }
+        };
+
+        // Добавить заповедник
+        const NewReserve = {
+            template: `
+                <v-container>
+                    <v-row justify="center">
+                        <v-col cols="12" md="8" lg="6">
+                            <v-card rounded="xl" elevation="4">
+                                <v-toolbar class="green-header rounded-t-xl"><v-toolbar-title class="text-white">🌄 Новый заповедник</v-toolbar-title></v-toolbar>
+                                <v-card-text class="pt-6">
+                                    <v-text-field label="Название" v-model="title" variant="outlined"></v-text-field>
+                                    <v-textarea label="Описание" v-model="desc" rows="4" variant="outlined"></v-textarea>
+                                    <v-text-field label="Регион" v-model="region" variant="outlined"></v-text-field>
+                                    <v-switch v-model="promo" label="Показывать в карусели" color="#1a5c3a"></v-switch>
+                                    <v-btn color="#1a5c3a" @click="submit" :loading="loading" block rounded="pill" class="mt-3">Создать</v-btn>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            `,
+            data: () => ({ title: '', desc: '', region: '', promo: false }),
+            computed: { loading() { return store.state.loading; } },
+            methods: {
+                submit() {
+                    if (!this.title || !this.desc || !this.region) { store.commit('setError', 'Заполните все поля'); return; }
+                    store.dispatch('createReserve', { title: this.title, desc: this.desc, region: this.region, promo: this.promo })
+                        .then(() => this.$router.push('/list'));
+                }
+            },
+            beforeEnter: requireAuth
+        };
+
+        // Мои заповедники
+        const MyReserves = {
+            template: `
+                <v-container>
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <h2 class="page-title" style="font-size:1.6rem;">📋 Мои заповедники</h2>
+                        <v-btn color="#1a5c3a" to="/new" rounded="pill">+ Добавить</v-btn>
+                    </div>
+                    <v-card v-for="r in list" :key="r.id" class="mb-3" rounded="lg" elevation="2">
+                        <v-row no-gutters>
+                            <v-col cols="4"><v-img :src="r.src" height="120" cover rounded-l-lg></v-img></v-col>
+                            <v-col cols="8">
+                                <div class="pa-3">
+                                    <div style="font-weight:700;">{{ r.title }}</div>
+                                    <span class="region-badge">{{ r.region }}</span>
+                                    <p style="font-size:0.8rem;color:#666;height:40px;overflow:hidden;">{{ r.desc }}</p>
+                                    <v-btn variant="text" color="#1a5c3a" :to="'/reserve/'+r.id">Открыть</v-btn>
+                                </div>
+                            </v-col>
+                        </v-row>
+                    </v-card>
+                    <div v-if="!list.length" class="text-center pa-8 text-grey">У вас пока нет заповедников</div>
+                </v-container>
+            `,
+            computed: { list() { return store.getters.myReserves; } },
+            beforeEnter: requireAuth
+        };
+
+        // Детальная страница - контент сверху, картинка снизу
+        const ReserveDetail = {
+            template: `
+                <v-container>
+                    <v-row justify="center">
+                        <v-col cols="12" md="9" lg="8">
+                            <v-card v-if="reserve" rounded="xl" elevation="4">
+                                <v-card-text class="detail-content">
+                                    <h1>{{ reserve.title }}</h1>
+                                    <span class="region">{{ reserve.region }}</span>
+                                    <v-divider class="my-3"></v-divider>
+                                    <p>{{ reserve.desc }}</p>
+                                    <div class="mt-4 pa-3" style="background:#e8f5e9;border-radius:12px;">
+                                        <v-icon icon="mdi-information" color="#1a5c3a"></v-icon>
+                                        <span style="font-weight:600;">Интересно:</span> Здесь обитают редкие виды, занесённые в Красную книгу.
+                                    </div>
+                                </v-card-text>
+                                <v-img :src="reserve.src" height="350" cover class="rounded-b-xl"></v-img>
+                                <v-card-actions class="pa-4">
+                                    <v-spacer></v-spacer>
+                                    <edit-modal v-if="isOwner" :reserve="reserve"></edit-modal>
+                                    <buy-modal :reserve="reserve"></buy-modal>
+                                </v-card-actions>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            `,
+            props: ['id'],
+            computed: {
+                reserve() { return store.getters.reserveById(Number(this.id)); },
+                isOwner() { const u = store.getters.user; return u && this.reserve && this.reserve.userId == u.id; }
+            }
+        };
+
+        // Редактирование
+        const EditModal = {
+            template: `
+                <v-dialog v-model="dialog" width="500">
+                    <template v-slot:activator="{ props }">
+                        <v-btn v-bind="props" color="orange" rounded="pill">✏️ Редактировать</v-btn>
+                    </template>
+                    <v-card rounded="xl">
+                        <v-toolbar class="green-header rounded-t-xl"><v-toolbar-title class="text-white">Редактирование</v-toolbar-title></v-toolbar>
+                        <v-card-text class="pt-4">
+                            <v-text-field label="Название" v-model="editTitle" variant="outlined"></v-text-field>
+                            <v-textarea label="Описание" v-model="editDesc" rows="4" variant="outlined"></v-textarea>
+                            <v-text-field label="Регион" v-model="editRegion" variant="outlined"></v-text-field>
+                        </v-card-text>
+                        <v-card-actions class="px-4 pb-4">
+                            <v-spacer></v-spacer>
+                            <v-btn variant="text" @click="dialog=false">Отмена</v-btn>
+                            <v-btn color="#1a5c3a" @click="save" :loading="loading" rounded="pill">Сохранить</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
+            `,
+            props: ['reserve'],
+            data: () => ({ dialog: false, editTitle: '', editDesc: '', editRegion: '', loading: false }),
+            mounted() { this.editTitle = this.reserve.title; this.editDesc = this.reserve.desc; this.editRegion = this.reserve.region; },
+            methods: {
+                save() {
+                    this.loading = true;
+                    store.dispatch('editReserve', { id: this.reserve.id, title: this.editTitle, desc: this.editDesc, region: this.editRegion })
+                        .finally(() => { this.loading = false; this.dialog = false; });
+                }
+            }
+        };
+
+        // Модалка покупки
+        const BuyModal = {
+            template: `
+                <v-dialog v-model="dialog" width="450">
+                    <template v-slot:activator="{ props }">
+                        <v-btn v-bind="props" color="#1a5c3a" rounded="pill" class="ml-1">🌿 Заказать</v-btn>
+                    </template>
+                    <v-card rounded="xl">
+                        <v-toolbar class="green-header rounded-t-xl"><v-toolbar-title class="text-white">Заявка</v-toolbar-title></v-toolbar>
+                        <v-card-text class="pt-4">
+                            <div style="font-weight:600;margin-bottom:12px;">{{ reserve.title }}</div>
+                            <v-text-field label="Ваше имя" v-model="name" variant="outlined"></v-text-field>
+                            <v-text-field label="Телефон" v-model="phone" variant="outlined" placeholder="+7 (XXX) XXX-XX-XX"></v-text-field>
+                            <v-textarea label="Комментарий" v-model="comment" rows="2" variant="outlined"></v-textarea>
+                        </v-card-text>
+                        <v-card-actions class="px-4 pb-4">
+                            <v-spacer></v-spacer>
+                            <v-btn variant="text" @click="close">Отмена</v-btn>
+                            <v-btn color="#1a5c3a" @click="save" :loading="loading" rounded="pill">Отправить</v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
+            `,
+            props: ['reserve'],
+            data: () => ({ dialog: false, name: '', phone: '', comment: '', loading: false }),
+            methods: {
+                close() { this.dialog = false; this.name = ''; this.phone = ''; this.comment = ''; },
+                save() {
+                    if (!this.name || !this.phone) return;
+                    this.loading = true;
+                    store.dispatch('createOrder', { name: this.name, phone: this.phone, reserveId: this.reserve.id, comment: this.comment })
+                        .finally(() => { this.loading = false; this.close(); });
+                }
+            }
+        };
+
+        // Заявки
+        const Orders = {
+            template: `
+                <v-container>
+                    <h2 class="page-title" style="font-size:1.6rem;margin-bottom:16px;">📩 Мои заявки</h2>
+                    <v-list v-if="list.length" lines="two" class="bg-transparent">
+                        <v-list-item v-for="o in list" :key="o.id" class="mb-2 bg-white rounded-xl elevation-1">
+                            <template v-slot:prepend>
+                                <v-checkbox :model-value="o.done" @click="toggle(o)" color="#1a5c3a" hide-details></v-checkbox>
+                            </template>
+                            <v-list-item-title style="font-weight:600;">{{ o.name }} — {{ o.phone }}</v-list-item-title>
+                            <v-list-item-subtitle>Заповедник #{{ o.reserveId }} | {{ o.date }}<br><span style="font-size:0.75rem;">{{ o.comment }}</span></v-list-item-subtitle>
+                        </v-list-item>
+                    </v-list>
+                    <div v-else class="text-center pa-8 text-grey">У вас пока нет заявок</div>
+                </v-container>
+            `,
+            computed: { list() { return store.getters.myOrders; } },
+            methods: { toggle(o) { store.dispatch('toggleOrder', o.id); } },
+            beforeEnter: requireAuth
+        };
+
+        // ==================== ROUTES ====================
+        const routes = [
+            { path: '/', component: Home },
+            { path: '/login', component: Login },
+            { path: '/registration', component: Register },
+            { path: '/new', component: NewReserve },
+            { path: '/list', component: MyReserves },
+            { path: '/orders', component: Orders },
+            { path: '/reserve/:id', component: ReserveDetail, props: true }
+        ];
+
+        const router = VueRouter.createRouter({ history: VueRouter.createWebHashHistory(), routes });
+
+        // ==================== APP ====================
+        const App = {
+            data: () => ({ drawer: false }),
+            computed: {
+                isLoggedIn() { return store.getters.isLoggedIn; },
+                showError: { get() { return !!store.state.error; }, set(val) { if (!val) store.commit('clearError'); } },
+                errorMsg() { return store.state.error; }
+            },
+            methods: {
+                logout() { store.dispatch('logout'); this.$router.push('/login'); this.drawer = false; }
+            }
+        };
+
+        const vuetify = Vuetify.createVuetify({
+            theme: { defaultTheme: 'light', themes: { light: { colors: { primary: '#1a5c3a' } } } }
+        });
+
+        const app = Vue.createApp(App);
+        app.use(router);
+        app.use(store);
+        app.use(vuetify);
+        app.component('buy-modal', BuyModal);
+        app.component('edit-modal', EditModal);
+        app.mount('#app');
+    </script>
+</body>
+</html>
